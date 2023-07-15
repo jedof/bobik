@@ -29,12 +29,31 @@ skincolor_keyboard.add(KeyboardButton("Черный"))
 main_menu = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=False)
 main_menu.row(KeyboardButton("Профиль"), KeyboardButton("Работы"))
 main_menu.add(KeyboardButton("Магазин"))
-
 con = sqlite3.connect("clickerdb.db")
 cur = con.cursor()
 state = None
 jobs_callback = []
 
+
+async def get_restaurant_food_categories_kb(restaurant_name):
+    global cur
+    sql = "SELECT DISTINCT fc.category_name"
+          "FROM restaurant_menu rm"
+          "LEFT JOIN food_categories fc ON rm.food_category_id = fc.category_id"
+          "LEFT JOIN restaurants r ON rm.restaurant_id = r.restaurant_id"
+         f"WHERE r.restaurant_name = {restaurant_name};"
+    restaurants = cur.execute(sql).fetchall()
+
+
+async def get_restaurants_kb():
+    global cur
+    restaurants = cur.execute("select restaurant_name from restaurants").fetchall()
+    restaurants_kb = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+    for restaurant in restaurants:
+        restaurants_kb.add(KeyboardButton(restaurant[0]))
+    restaurants_kb.add(KeyboardButton("Назад"))
+    return restaurants_kb
+    
 
 async def generate_jobbuttons(jobs: list[tuple[str, int]], level: int):
     global jobs_callback
@@ -96,7 +115,7 @@ async def get_job_info_message(job: tuple):
 
 
 async def get_job_kb(job_name: str):
-    job_kb = InlineKeyboardMarkup()
+    job_kb = []
     row = random.randint(0, 3)
     column = random.randint(0, 4)
     for row_num in range(4):
@@ -111,7 +130,8 @@ async def get_job_kb(job_name: str):
                     buttons.append(InlineKeyboardButton("f", callback_data="Speshial"))
         print(buttons)
         print(job_kb)
-        job_kb.row(*buttons)
+        job_kb.append(buttons)
+    job_kb = InlineKeyboardMarkup(inline_keyboard=job_kb)
     return job_kb
 
 
@@ -197,8 +217,13 @@ async def message_handler(message):
         elif message.text == "Работы":
             await send_jobs(message)
         elif message.text == "Магазин":
-            await message.answer("<b>Выбери магазин</b>")
+            restaurants_kb = await get_restaurants_kb()
+            await message.answer("<b>Выбери магазин</b>", reply_markup=restaurants_kb)
+            state = "restaurants"
         elif message.text == ("Назад"):
+            await show_main_menu(message)
+    elif state == "restaurants":
+        if message.text == ("Назад"):
             await show_main_menu(message)
                 
 
