@@ -37,11 +37,11 @@ jobs_callback = []
 
 async def get_restaurant_food_categories_kb(restaurant_name):
     global cur
-    sql = "SELECT DISTINCT fc.category_name"
-          "FROM restaurant_menu rm"
-          "LEFT JOIN food_categories fc ON rm.food_category_id = fc.category_id"
-          "LEFT JOIN restaurants r ON rm.restaurant_id = r.restaurant_id"
-         f"WHERE r.restaurant_name = {restaurant_name};"
+    sql = "SELECT DISTINCT fc.category_name"\
+          "FROM restaurant_menu rm"\
+          "LEFT JOIN food_categories fc ON rm.food_category_id = fc.category_id"\
+          "LEFT JOIN restaurants r ON rm.restaurant_id = r.restaurant_id"\
+          f"WHERE r.restaurant_name = {restaurant_name};"
     restaurants = cur.execute(sql).fetchall()
 
 
@@ -57,13 +57,14 @@ async def get_restaurants_kb():
 
 async def generate_jobbuttons(jobs: list[tuple[str, int]], level: int):
     global jobs_callback
-    jobs_kb = InlineKeyboardMarkup()
+    buttons = []
     for job in jobs:
         if job[1] <= level:
-            jobs_kb.add(InlineKeyboardButton(text=job[0], callback_data=job[0]))
+            buttons.append(InlineKeyboardButton(text=job[0], callback_data=job[0]))
             jobs_callback.append(job[0])
         else:
             break
+    jobs_kb = InlineKeyboardMarkup(inline_keyboard=buttons)
     return jobs_kb
 
 
