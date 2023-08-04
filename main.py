@@ -57,14 +57,13 @@ async def get_restaurants_kb():
 
 async def generate_jobbuttons(jobs: list[tuple[str, int]], level: int):
     global jobs_callback
-    buttons = []
+    jobs_kb = InlineKeyboardMarkup()
     for job in jobs:
         if job[1] <= level:
-            buttons.append(InlineKeyboardButton(text=job[0], callback_data=job[0]))
+            jobs_kb.add(InlineKeyboardButton(text=job[0], callback_data=job[0]))
             jobs_callback.append(job[0])
         else:
             break
-    jobs_kb = InlineKeyboardMarkup(inline_keyboard=buttons)
     return jobs_kb
 
 
@@ -117,23 +116,43 @@ async def get_job_info_message(job: tuple):
 
 async def get_job_kb(job_name: str):
     job_kb = []
-    row = random.randint(0, 3)
-    column = random.randint(0, 4)
-    for row_num in range(4):
-        if row != row_num:
-            buttons = [InlineKeyboardButton("d", callback_data=None) for column_num in range(5)]
-        else:
-            buttons = []
-            for column_num in range(5):
-                if column_num != column:
-                    buttons.append(InlineKeyboardButton("d", callback_data=None))
-                else:
-                    buttons.append(InlineKeyboardButton("f", callback_data="Speshial"))
-        print(buttons)
-        print(job_kb)
-        job_kb.append(buttons)
+    if job_name == "Дворник":
+        row = random.randint(0, 3)
+        column = random.randint(0, 4)
+        for row_num in range(4):
+            if row != row_num:
+                buttons = [InlineKeyboardButton("d", callback_data=None) for column_num in range(5)]
+            else:
+                buttons = []
+                for column_num in range(5):
+                    if column_num != column:
+                        buttons.append(InlineKeyboardButton("d", callback_data=None))
+                    else:
+                        buttons.append(InlineKeyboardButton("f", callback_data="Special"))
+            print(buttons)
+            print(job_kb)
+            job_kb.append(buttons)
+    elif job_name == "Лесоруб":
+        job_kb.append(InlineKeyboardButton("⬅", "left"))
+        job_kb.append(InlineKeyboardButton("➡", "right"))
     job_kb = InlineKeyboardMarkup(inline_keyboard=job_kb)
     return job_kb
+
+
+async def get_tree_for_lumberjack_job():
+#     |/
+#    \|
+#     |/
+    tree = []
+    for i in range(10):
+        side = random.randint(0, 2)
+        if side == 0:
+            tree.append("ㅤ| ")
+        elif side == 1: 
+            tree.append("ㅤ\| ")
+        elif side == 2: 
+            tree.append("ㅤ|/")
+    return tree
 
 
 @dp.callback_query_handler(lambda call: call.data in jobs_callback)
@@ -142,6 +161,10 @@ async def jobs_callback_handler(call):
     job = await get_job_by_jobname(call.data)
     msg = f"<b>Ты устроился на работу</b>\n\n{await get_job_info_message(job)}"
     job_kb = await get_job_kb(call.data)
+    if call.data == "Лесоруб":
+        tree = await get_tree_for_lumberjack_job()
+        await call.message.answer(f"{tree[0]}\n"
+                                  f"{tree[1]}")
     await call.message.answer(msg, reply_markup=job_kb)
 
 
