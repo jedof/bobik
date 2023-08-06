@@ -147,11 +147,11 @@ async def get_tree_for_lumberjack_job():
     for i in range(10):
         side = random.randint(0, 2)
         if side == 0:
-            tree.append("ㅤ| ")
+            tree.append("*     |     *")
         elif side == 1: 
-            tree.append("ㅤ\| ")
+            tree.append("*    \|     *")
         elif side == 2: 
-            tree.append("ㅤ|/")
+            tree.append("*     |/    *")
     return tree
 
 
@@ -254,3 +254,4 @@ async def message_handler(message):
 if __name__ == '__main__':
     from aiogram import executor
     executor.start_polling(dp)
+    
