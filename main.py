@@ -164,7 +164,14 @@ async def jobs_callback_handler(call):
     if call.data == "Лесоруб":
         tree = await get_tree_for_lumberjack_job()
         await call.message.answer(f"{tree[0]}\n"
-                                  f"{tree[1]}")
+                                  f"{tree[1]}\n"
+                                  f"{tree[3]}\n"
+                                  f"{tree[4]}\n"
+                                  f"{tree[5]}\n"
+                                  f"{tree[6]}\n"
+                                  f"{tree[7]}\n"
+                                  f"{tree[8]}\n"
+                                  f"{tree[9]}\n")
     await call.message.answer(msg, reply_markup=job_kb)
 
 
