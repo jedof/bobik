@@ -1,0 +1,4 @@
+/venv/
+.env
+clicker.py
+clickerdb.db
