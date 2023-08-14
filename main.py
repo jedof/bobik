@@ -1,9 +1,10 @@
 import os
 import logging
-import sqlite3
+import psycopg2
 import random
 
 # from exceptions import MissingEnvVaribleError
+# psql -h localhost -d bobikdb -U bobik -p 5432
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher
 from aiogram.types import ParseMode, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
@@ -11,6 +12,11 @@ from aiogram.contrib.middlewares.logging import LoggingMiddleware
 
 load_dotenv()
 TGTOKEN = os.getenv('TGTOKEN')
+DATABASE = os.getenv('DATABASE')
+USERDB = os.getenv('USERDB')
+PASSWORD = os.getenv('PASSWORD')
+PORT = os.getenv('PORT')
+HOST = os.getenv('HOST')
 logging.basicConfig(level=logging.INFO)
 # if not TGTOKEN:
     # raise MissingEnvVaribleError('не указана переменная окружения')
@@ -29,8 +35,6 @@ skincolor_keyboard.add(KeyboardButton("Черный"))
 main_menu = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=False)
 main_menu.row(KeyboardButton("Профиль"), KeyboardButton("Работы"))
 main_menu.add(KeyboardButton("Магазин"))
-con = sqlite3.connect("clickerdb.db")
-cur = con.cursor()
 state = None
 jobs_callback = []
 
@@ -42,12 +46,14 @@ async def get_restaurant_food_categories_kb(restaurant_name):
           "LEFT JOIN food_categories fc ON rm.food_category_id = fc.category_id"\
           "LEFT JOIN restaurants r ON rm.restaurant_id = r.restaurant_id"\
           f"WHERE r.restaurant_name = {restaurant_name};"
-    restaurants = cur.execute(sql).fetchall()
+    cur.execute(sql)
+    restaurants = cur.fetchall()
 
 
 async def get_restaurants_kb():
     global cur
-    restaurants = cur.execute("select restaurant_name from restaurants").fetchall()
+    restaurants = cur.execute("select restaurant_name from restaurants")
+    restaurants = cur.fetchall()
     restaurants_kb = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     for restaurant in restaurants:
         restaurants_kb.add(KeyboardButton(restaurant[0]))
@@ -68,8 +74,8 @@ async def generate_jobbuttons(jobs: list[tuple[str, int]], level: int):
 
 
 async def get_user_info(user_id: int) -> str | None:
-    nicksql = cur.execute(f"select user_name from users where user_id = {user_id}")
-    nicksql = nicksql.fetchone()
+    cur.execute(f"select user_name from users where user_id = {user_id}")
+    nicksql = cur.fetchone()
     return nicksql[0] if nicksql else None
 
 
@@ -84,8 +90,10 @@ async def show_main_menu(message) -> bool:
     
 
 async def get_jobs(user_id):
-    levelnum = cur.execute(f"select l.level_number from users u left join levels l on u.level_id = l.level_id where user_id = {user_id}").fetchone()
-    available_jobs = cur.execute(f"SELECT j.job_name, l.level_number from jobs_levels jl LEFT JOIN jobs j on j.job_id = jl.job_id left join levels l on jl.level_id = l.level_id;").fetchall()
+    cur.execute(f"select l.level_number from users u left join levels l on u.level_id = l.level_id where user_id = {user_id}")
+    levelnum = cur.fetchone()
+    available_jobs = cur.execute(f"SELECT j.job_name, l.level_number from jobs_levels jl LEFT JOIN jobs j on j.job_id = jl.job_id left join levels l on jl.level_id = l.level_id;")
+    available_jobs = cur.fetchall()
     jobs_kb = None
     if available_jobs[0][1] <= levelnum[0]:
         jobs_kb = await generate_jobbuttons(jobs=available_jobs, level=levelnum[0])
@@ -105,7 +113,8 @@ async def send_jobs(message):
 
 async def get_job_by_jobname(job: str):
     job_sql = f"select job_name, job_description, job_salary from jobs where job_name = '{job}'"
-    job = cur.execute(job_sql).fetchone()
+    cur.execute(job_sql)
+    job = cur.fetchone()
     return job
 
 
@@ -180,8 +189,8 @@ async def deluser_command(message):
 async def start_command(message):
     global con, cur, state
     state = None
-    user_info = cur.execute(f"select user_name, gender, skin_color from users where user_id = {message.from_user.id}")
-    user_info = user_info.fetchone()
+    cur.execute(f"select user_name, gender, skin_color from users where user_id = {message.from_user.id}")
+    user_info = cur.fetchone()
     print(user_info)
     if not user_info:
         sql = f"insert into \
@@ -228,7 +237,8 @@ async def message_handler(message):
         con.commit()
         await show_main_menu(message)
     elif state == "main_menu":
-        usersql = cur.execute(f"SELECT u.user_name, j.job_name, j.job_salary, pa.balance, l.level_number from users u LEFT JOIN jobs j ON j.job_id = u.job_id LEFT JOIN levels l ON l.level_id = u.level_id left join player_attributes pa on pa.user_id = u.user_id WHERE u.user_id = {message.from_user.id};").fetchone()
+        cur.execute(f"SELECT u.user_name, j.job_name, j.job_salary, pa.balance, l.level_number from users u LEFT JOIN jobs j ON j.job_id = u.job_id LEFT JOIN levels l ON l.level_id = u.level_id left join player_attributes pa on pa.user_id = u.user_id WHERE u.user_id = {message.from_user.id};")
+        usersql = cur.fetchone()
         if message.text == "Профиль":
             await message.answer("<b>Твой профиль</b>\n\n"
                                  f"<b>Имя:</b> <i>{usersql[0]}</i>\n"
@@ -253,4 +263,16 @@ async def message_handler(message):
 
 if __name__ == '__main__':
     from aiogram import executor
+    print(DATABASE)
+    print(USERDB)
+    print(PASSWORD)
+    print(PORT)
+    print(HOST)
+    con=psycopg2.connect(database=DATABASE,
+                         user=USERDB,
+                         password=PASSWORD,
+                         port=PORT,
+                         host=HOST)
+    cur = con.cursor()
     executor.start_polling(dp)
+    

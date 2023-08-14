@@ -1,36 +1,37 @@
-PRAGMA foreign_keys=OFF;
+-- Active: 1691916540923@@127.0.0.1@5432@bobikdb
+-- PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
 CREATE TABLE categories (
-  category_id INTEGER PRIMARY key, 
+  category_id BIGSERIAL PRIMARY key, 
   category_name VARCHAR(255), 
   category_path VARCHAR(255)
 );
 CREATE TABLE products (
-  product_id INTEGER PRIMARY key, 
+  product_id BIGSERIAL PRIMARY key, 
   product_name VARCHAR(255), 
-  category_id INTEGER REFERENCES categories (category_id) ON DELETE 
+  category_id BIGSERIAL REFERENCES categories (category_id) ON DELETE 
   SET 
     NULL
 );
 CREATE TABLE product_attributes (
-  attribute_id INTEGER PRIMARY KEY, 
+  attribute_id BIGSERIAL PRIMARY KEY, 
   attribute_name VARCHAR(255), 
-  product_id INTEGER REFERENCES products (product_id) ON DELETE CASCADE, 
+  product_id BIGSERIAL REFERENCES products (product_id) ON DELETE CASCADE, 
   attribute_value VARCHAR(255)
 );
 CREATE TABLE product_sizes (
-  size_id INTEGER PRIMARY KEY, 
+  size_id BIGSERIAL PRIMARY KEY, 
   size_name VARCHAR(255), 
-  product_id INTEGER REFERENCES products (product_id) ON DELETE CASCADE, 
+  product_id BIGSERIAL REFERENCES products (product_id) ON DELETE CASCADE, 
   price INTEGER
 );
 CREATE TABLE restaurants (
-  restaurant_id INTEGER PRIMARY KEY, 
+  restaurant_id BIGSERIAL PRIMARY KEY, 
   restaurant_name VARCHAR(255)
 );
 INSERT INTO restaurants VALUES(1,'Бургер и запятая');
 CREATE TABLE food_categories(
-  category_id INTEGER PRIMARY KEY, 
+  category_id BIGSERIAL PRIMARY KEY, 
   category_name VARCHAR(255)
 );
 INSERT INTO food_categories VALUES(1,'Популярное');
@@ -42,9 +43,9 @@ INSERT INTO food_categories VALUES(6,'Завтрак');
 INSERT INTO food_categories VALUES(7,'Десерты');
 INSERT INTO food_categories VALUES(8,'Соусы');
 CREATE TABLE restaurant_menu (
-  position_id INTEGER PRIMARY KEY, 
-  restaurant_id INTEGER REFERENCES restaurants (restaurant_id) ON DELETE CASCADE, 
-  food_category_id INTEGER REFERENCES food_categories (category_id) ON DELETE 
+  position_id BIGSERIAL PRIMARY KEY, 
+  restaurant_id BIGSERIAL REFERENCES restaurants (restaurant_id) ON DELETE CASCADE, 
+  food_category_id BIGSERIAL REFERENCES food_categories (category_id) ON DELETE 
   SET 
     NULL, 
     position_name VARCHAR(255), 
@@ -173,16 +174,16 @@ INSERT INTO restaurant_menu VALUES(118,1,4,'Чай Хуго Коктейль',NU
 INSERT INTO restaurant_menu VALUES(119,1,4,'Двойной Эспрессо',NULL,2,69);
 INSERT INTO restaurant_menu VALUES(120,1,4,'Артезианская вода Белоголовка негазированная 0,4 л. - артезианская вода без газа',NULL,50,99);
 CREATE TABLE ingredients (
-  ingredient_id INTEGER PRIMARY KEY, 
+  ingredient_id BIGSERIAL PRIMARY KEY, 
   ingredient_name VARCHAR(255)
 );
 CREATE TABLE compositions (
-  composition_id INTEGER PRIMARY KEY, 
-  position_id INTEGER REFERENCES restaurant_menu (position_id) ON DELETE CASCADE, 
-  ingredient_id INTEGER REFERENCES ingredients (ingredient_id) ON DELETE CASCADE
+  composition_id BIGSERIAL PRIMARY KEY, 
+  position_id BIGSERIAL REFERENCES restaurant_menu (position_id) ON DELETE CASCADE, 
+  ingredient_id BIGSERIAL REFERENCES ingredients (ingredient_id) ON DELETE CASCADE
 );
 CREATE TABLE levels (
-  level_id INTEGER PRIMARY KEY, level_number INTEGER, 
+  level_id BIGSERIAL PRIMARY KEY, level_number INTEGER, 
   next_level_entry_score INTEGER
 );
 INSERT INTO levels VALUES(1,1,50);
@@ -196,7 +197,7 @@ INSERT INTO levels VALUES(8,8,700);
 INSERT INTO levels VALUES(9,9,850);
 INSERT INTO levels VALUES(10,10,1000);
 CREATE TABLE jobs (
-  job_id INTEGER PRIMARY KEY, 
+  job_id BIGSERIAL PRIMARY KEY, 
   job_name VARCHAR(255), 
   job_description VARCHAR(255), 
   job_salary INTEGER
@@ -213,9 +214,9 @@ INSERT INTO jobs VALUES(9,'Металлозавод','Обрабытывай м�
 INSERT INTO jobs VALUES(10,'Стройка','Строй здания',100);
 INSERT INTO jobs VALUES(11,'Завод автозапчастей','Делай автозапчасти',150);
 CREATE TABLE jobs_levels (
-  id INTEGER PRIMARY KEY, 
-  level_id INTEGER REFERENCES levels (level_id) ON DELETE CASCADE, 
-  job_id INTEGER REFERENCES jobs (job_id) ON DELETE CASCADE
+  id BIGSERIAL PRIMARY KEY, 
+  level_id BIGSERIAL REFERENCES levels (level_id) ON DELETE CASCADE, 
+  job_id BIGSERIAL REFERENCES jobs (job_id) ON DELETE CASCADE
 );
 INSERT INTO jobs_levels VALUES(1,1,2);
 INSERT INTO jobs_levels VALUES(2,2,3);
@@ -228,22 +229,25 @@ INSERT INTO jobs_levels VALUES(8,8,9);
 INSERT INTO jobs_levels VALUES(9,9,10);
 INSERT INTO jobs_levels VALUES(10,10,11);
 CREATE TABLE users (
-  user_id INTEGER, 
+  user_id BIGSERIAL PRIMARY KEY, 
   first_name text NOT NULL, 
   last_name TEXT, 
   user_name TEXT, 
-  level_id INTEGER REFERENCES levels (level_id) ON DELETE CASCADE, 
-  job_id INTEGER REFERENCES jobs (job_id) ON DELETE CASCADE,
+  level_id BIGSERIAL REFERENCES levels (level_id) ON DELETE CASCADE, 
+  job_id BIGSERIAL REFERENCES jobs (job_id) ON DELETE CASCADE,
   gender VARCHAR(255), skin_color VARCHAR(255));
 INSERT INTO users VALUES(1319656277,'Иван','Каринский','Иван',3,1,'Мужской','Белый');
 INSERT INTO users VALUES(123456,'sadas','sadas','asdas',3,3,'Женский','Белый');
 CREATE TABLE player_attributes (
-  attribute_id INTEGER PRIMARY KEY,
-  user_id INTEGER REFERENCES users (user_id) ON DELETE CASCADE,
+  attribute_id BIGSERIAL PRIMARY KEY,
+  user_id BIGSERIAL REFERENCES users (user_id) ON DELETE CASCADE,
   balance INTEGER DEFAULT 0,
   score INTEGER DEFAULT 0,
   food INTEGER DEFAULT 2100,
   stamina INTEGER DEFAULT 100
 );
 INSERT INTO player_attributes VALUES(1,1319656277,0,0,2100,100);
+-- ALTER TABLE users alter COLUMN user_id 
 COMMIT;
+
+-- DROP TABLE users CASCADE;
