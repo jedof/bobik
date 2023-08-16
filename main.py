@@ -74,9 +74,31 @@ async def generate_jobbuttons(jobs: list[tuple[str, int]], level: int):
 
 
 async def get_user_info(user_id: int) -> str | None:
-    cur.execute(f"select user_name from users where user_id = {user_id}")
-    nicksql = cur.fetchone()
-    return nicksql[0] if nicksql else None
+    sql = "SELECT u.user_id,"\
+                "u.user_name,"\
+                "u.first_name,"\
+                "u.last_name,"\
+                "u.gender,"\
+                "u.skin_color,"\
+                "l.level_id,"\
+                "l.level_number,"\
+                "l.next_level_entry_score,"\
+                "j.job_id,"\
+                "j.job_name,"\
+                "j.job_salary,"\
+                "j.job_description,"\
+                "pa.balance,"\
+                "pa.food,"\
+                "pa.score,"\
+                "pa.stamina "\
+        "FROM users u "\
+        "LEFT JOIN levels l ON u.level_id = l.level_id "\
+        "LEFT JOIN jobs j ON u.job_id = j.job_id "\
+        "LEFT JOIN player_attributes pa ON u.user_id = pa.user_id "\
+        f"WHERE u.user_id = {user_id};"
+    cur.execute(sql)
+    user_info = cur.fetchone()
+    return user_info if user_info else None
 
 
 async def show_main_menu(message) -> bool:
@@ -85,7 +107,7 @@ async def show_main_menu(message) -> bool:
     nicksql = await get_user_info(message.from_user.id)
     if not nicksql:
         return False
-    await message.answer(f"Добро пожаловоть в меню {nicksql}", reply_markup=main_menu)
+    await message.answer(f"Добро пожаловоть в меню {nicksql[1]}", reply_markup=main_menu)
     return True
     
 
@@ -128,19 +150,16 @@ async def get_job_kb(job_name: str):
     if job_name == "Дворник":
         row = random.randint(0, 3)
         column = random.randint(0, 4)
-        for row_num in range(4):
-            if row != row_num:
-                buttons = [InlineKeyboardButton("d", callback_data=None) for column_num in range(5)]
-            else:
-                buttons = []
-                for column_num in range(5):
-                    if column_num != column:
-                        buttons.append(InlineKeyboardButton("d", callback_data=None))
-                    else:
-                        buttons.append(InlineKeyboardButton("f", callback_data="Special"))
-            print(buttons)
-            print(job_kb)
-            job_kb.append(buttons)
+        job_kb = InlineKeyboardMarkup(row_width=5)
+        for i in range(4):
+            for j in range(5):
+                text = " "
+                call_back = " "
+                if row == i and column == j:
+                    text = "1"
+                    call_back = "special"
+                job_kb.insert(InlineKeyboardButton(text, callback_data=call_back))
+        return job_kb
     elif job_name == "Лесоруб":
         job_kb.append(InlineKeyboardButton("⬅", "left"))
         job_kb.append(InlineKeyboardButton("➡", "right"))
@@ -164,13 +183,25 @@ async def get_tree_for_lumberjack_job():
     return tree
 
 
+@dp.callback_query_handler(lambda call: call.data == " ")
+async def cleaner_callback(call):
+    await call.answer("Ты промазал")
+
+
+@dp.callback_query_handler(lambda call: call.data == "special")
+async def cleaner_true_callback(call):
+    await call.answer()
+
+
 @dp.callback_query_handler(lambda call: call.data in jobs_callback)
 async def jobs_callback_handler(call):
     await call.answer()
-    job = await get_job_by_jobname(call.data)
-    msg = f"<b>Ты устроился на работу</b>\n\n{await get_job_info_message(job)}"
+    user_info = await get_user_info(call.from_user.id)
+    msg = f"<b>Ты устроился на работу</b>"
     job_kb = await get_job_kb(call.data)
-    if call.data == "Лесоруб":
+    if call.data == "Дворник":
+        await call.message.answer(f"{msg} \n\n{user_info}", reply_markup=job_kb)    
+    elif call.data == "Лесоруб":
         tree = await get_tree_for_lumberjack_job()
         await call.message.answer(f"{tree[0]}\n"
                                   f"{tree[1]}\n"
@@ -181,7 +212,7 @@ async def jobs_callback_handler(call):
                                   f"{tree[7]}\n"
                                   f"{tree[8]}\n"
                                   f"{tree[9]}\n")
-    await call.message.answer(msg, reply_markup=job_kb)
+    
 
 
 @dp.message_handler(commands=["deluser"])
