@@ -13,16 +13,43 @@ PORT = os.getenv('PORT')
 HOST = os.getenv('HOST')
 
 
-gender_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-male = KeyboardButton("Мужской")
-female = KeyboardButton("Женский")
-gender_keyboard.add(male)
-gender_keyboard.add(female)
-skincolor_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-skincolor_keyboard.add(KeyboardButton( "Белый"))
-skincolor_keyboard.add(KeyboardButton("Черный"))
-main_menu = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=False)
-main_menu.row(KeyboardButton("Профиль"), KeyboardButton("Работы"))
-main_menu.add(KeyboardButton("Магазин"))
+kb = [
+    [
+        KeyboardButton(text="Мужской"),
+        KeyboardButton(text="Женский")
+    ]
+]
+gender_keyboard = ReplyKeyboardMarkup(
+    keyboard=kb,
+    resize_keyboard=True, 
+    one_time_keyboard=True
+)
+
+kb = [
+    [
+        KeyboardButton(text="Белый"),
+        KeyboardButton(text="Черный")
+    ]
+]
+skincolor_keyboard = ReplyKeyboardMarkup(
+    keyboard=kb,
+    resize_keyboard=True, 
+    one_time_keyboard=True
+)
+
+kb = [
+    [
+        KeyboardButton(text="Профиль"), 
+        KeyboardButton(text="Работы")
+    ],
+    [
+        KeyboardButton(text="Магазин")       
+    ]
+]
+main_menu = ReplyKeyboardMarkup(
+    keyboard=kb,
+    resize_keyboard=True, 
+    one_time_keyboard=True
+)
 state = None
 jobs_callback = []
