@@ -759,3 +759,29 @@ INSERT INTO jobs_levels (level_id, job_id) VALUES (7, 8);
 INSERT INTO jobs_levels (level_id, job_id) VALUES (8, 9);
 INSERT INTO jobs_levels (level_id, job_id) VALUES (9, 10);
 INSERT INTO jobs_levels (level_id, job_id) VALUES (10, 11);
+
+SELECT u.user_id,
+       u.user_name,
+       u.first_name,
+       u.last_name,
+       u.gender,
+       u.skin_color,
+       l.level_id,
+       l.level_number,
+       l.next_level_entry_score,
+       j.job_id,
+       j.job_name,
+       j.job_salary,
+       j.job_description,
+       pa.balance,
+       pa.food,
+       pa.score,
+       pa.stamina
+FROM users u
+LEFT JOIN levels l ON u.level_id = l.level_id
+LEFT JOIN jobs j ON u.job_id = j.job_id
+LEFT JOIN player_attributes pa ON u.user_id = pa.user_id;
+
+UPDATE player_attributes set balance = balance + (SELECT j.job_salary from users u INNER JOIN jobs j ON u.job_id = j.job_id where u.user_id = 1319656277) WHERE user_id = 1319656277 RETURNING balance;
+
+SELECT j.job_salary from users u INNER JOIN jobs j ON u.job_id = j.job_id where u.user_id = 1319656277
