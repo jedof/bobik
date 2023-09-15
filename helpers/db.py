@@ -1,7 +1,7 @@
 import psycopg2
 import config
 
-from keyboard_helpers import generate_jobbuttons
+from helpers.keyboard_helpers import generate_jobbuttons
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 
