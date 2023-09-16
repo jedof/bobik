@@ -1,6 +1,6 @@
 import config
 
-from aiogram import Router
+from aiogram import Router, F
 from helpers.keyboard_helpers import show_main_menu
 from helpers.db import increment_balance, update_user_job, get_restaurants_kb
 from helpers.keyboard_helpers import get_job_kb, send_jobs
@@ -9,12 +9,12 @@ from helpers.keyboard_helpers import get_job_kb, send_jobs
 router = Router()
 
 
-@router.callback_query_handler(lambda call: call.data == " ")
+@router.callback_query(F.data == " ")
 async def cleaner_callback(call):
     await call.answer("Ты промазал")
 
 
-@router.callback_query_handler(lambda call: call.data.startswith("special"))
+@router.callback_query(F.data.startswith("special"))
 async def cleaner_true_callback(call):
     await call.answer()
     job = call.data.split()[-1]
@@ -24,7 +24,7 @@ async def cleaner_true_callback(call):
     await call.message.edit_text(message, reply_markup=job_kb)
 
 
-@router.callback_query_handler(lambda call: call.data in config.jobs_callback)
+@router.callback_query(F.data in config.jobs_callback)
 async def jobs_callback_handler(call):
     await call.answer()
     await update_user_job(call.from_user.id, call.data)
@@ -33,7 +33,7 @@ async def jobs_callback_handler(call):
     await call.message.answer(message, reply_markup=job_kb)
 
 
-@router.callback_query_handler(lambda call: call.data in ("left", "right"))
+@router.callback_query(F.data in ("left", "right"))
 async def lumberjack_job(call):
     is_lumber_on_left = False
     first_layer = call.message.text[-14:]

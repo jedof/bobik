@@ -1,7 +1,7 @@
 import config
 import random
 
-from helpers.db import get_user_info, get_jobs
+from helpers.db import get_user_info, get_level_and_jobs
 from helpers.games import get_tree_for_lumberjack_job
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
@@ -49,11 +49,6 @@ async def show_main_menu(message) -> bool:
         return False
     await message.answer(f"Добро пожаловоть в меню {nicksql[1]}", reply_markup=config.main_menu)
     return True
-
-
-async def send_jobs(message):
-    msg, jobs_kb = await get_jobs(message.from_user.id)
-    await message.answer(msg, reply_markup=jobs_kb)
         
 
 async def generate_jobbuttons(jobs: list[tuple[str, int]], level: int):
@@ -66,3 +61,22 @@ async def generate_jobbuttons(jobs: list[tuple[str, int]], level: int):
         else:
             break
     return jobs_kb
+
+
+async def get_jobs_kb(available_jobs, levelnum):
+    jobs_kb = None
+    if available_jobs[0][1] <= levelnum:
+        jobs_kb = await generate_jobbuttons(jobs=available_jobs, level=levelnum)
+    msg = f"<b>Выбери работу:</b>\n<b><i>Твой уровень: {levelnum}</i></b>\n\n"
+    for job in available_jobs:
+        if job[1] <= levelnum:
+            msg += f"<b>{job[0]}</b> <i>- доступно с {job[1]} уровня</i>\n"
+        else:
+            msg += f"<b>{job[0]}</b> <i>- доступно с {job[1]} уровня (недоступно)</i>\n"
+    return msg, jobs_kb
+
+
+async def send_jobs(message):
+    available_jobs, levelnum = await get_level_and_jobs(message.from_user.id)
+    msg, jobs_kb = await get_jobs_kb(available_jobs, levelnum)
+    await message.answer(msg, reply_markup=jobs_kb)

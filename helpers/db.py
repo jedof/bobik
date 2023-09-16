@@ -1,7 +1,6 @@
 import psycopg2
 import config
 
-from helpers.keyboard_helpers import generate_jobbuttons
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 
@@ -60,22 +59,12 @@ async def get_job_by_jobname(job: str):
     return job
 
 
-async def get_jobs(user_id):
+async def get_level_and_jobs(user_id):
     cur.execute(f"select l.level_number from users u left join levels l on u.level_id = l.level_id where user_id = {user_id}")
     levelnum = cur.fetchone()
     available_jobs = cur.execute(f"SELECT j.job_name, l.level_number from jobs_levels jl LEFT JOIN jobs j on j.job_id = jl.job_id left join levels l on jl.level_id = l.level_id;")
     available_jobs = cur.fetchall()
-    jobs_kb = None
-    if available_jobs[0][1] <= levelnum[0]:
-        jobs_kb = await generate_jobbuttons(jobs=available_jobs, level=levelnum[0])
-    msg = f"<b>Выбери работу:</b>\n<b><i>Твой уровень: {levelnum[0]}</i></b>\n\n"
-    for job in available_jobs:
-        if job[1] <= levelnum[0]:
-            msg += f"<b>{job[0]}</b> <i>- доступно с {job[1]} уровня</i>\n"
-        else:
-            msg += f"<b>{job[0]}</b> <i>- доступно с {job[1]} уровня (недоступно)</i>\n"
-    return msg, jobs_kb
-
+    return levelnum[0], available_jobs
 
 async def get_user_info(user_id: int) -> str | None:
     sql = "SELECT u.user_id,"\
