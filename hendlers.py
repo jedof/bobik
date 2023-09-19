@@ -5,7 +5,7 @@ from aiogram.filters import Command
 from helpers.keyboard_helpers import show_main_menu
 from helpers.db import increment_balance, update_user_job, get_restaurants_kb, con, cur
 from helpers.keyboard_helpers import get_job_kb, send_jobs
-from helpers.callback_factories import LumberjackJobCallbackFactory
+from helpers.callback_factories import LumberjackJobCallbackFactory, JobsCallbackFactory
 
 
 router = Router()
@@ -26,13 +26,16 @@ async def cleaner_true_callback(call):
     await call.message.edit_text(message, reply_markup=job_kb)
 
 
-# @router.callback_query(F.data in config.jobs_callback)
-# async def jobs_callback_handler(call: types.CallbackQuery):
-#     await call.answer()
-#     await update_user_job(call.from_user.id, call.data)
-#     message, job_kb = await get_job_kb(call.from_user.id, call.data)
-#     print("!!!!!!!", job_kb, message)
-#     await call.message.answer(message, reply_markup=job_kb)
+@router.callback_query(JobsCallbackFactory.filter())
+async def jobs_callback_handler(
+    call: types.CallbackQuery,
+    callback_data: JobsCallbackFactory
+):
+    await call.answer()
+    await update_user_job(call.from_user.id, callback_data.job)
+    message, job_kb = await get_job_kb(call.from_user.id, callback_data.job)
+    print("!!!!!!!", job_kb, message)
+    await call.message.answer(message, reply_markup=job_kb)
 
 
 @router.callback_query(LumberjackJobCallbackFactory.filter())
@@ -45,7 +48,6 @@ async def lumberjack_job(
     second_layer = callback.message.text[-27:-14]
     if first_layer[5] == "-":
         is_lumber_on_left = True
-    print('--- LumberjackJobCallbackFactory:', callback_data.action)
     print(is_lumber_on_left)
     print(callback.message.text[-27:])
 

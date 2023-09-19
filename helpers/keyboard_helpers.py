@@ -7,7 +7,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram import types
-from helpers.callback_factories import LumberjackJobCallbackFactory
+from helpers.callback_factories import LumberjackJobCallbackFactory, JobsCallbackFactory
 
 
 async def get_job_kb(user_id, job_name):
@@ -27,10 +27,12 @@ async def get_job_kb(user_id, job_name):
 async def get_lumberjack_kb():
     builder = InlineKeyboardBuilder()
     builder.button(
-        text="⬅", callback_data=LumberjackJobCallbackFactory(action="left")
+        text="⬅", 
+        callback_data=LumberjackJobCallbackFactory(action="left")
     )
     builder.button(
-        text="➡", callback_data=LumberjackJobCallbackFactory(action="right")
+        text="➡", 
+        callback_data=LumberjackJobCallbackFactory(action="right")
     )
     builder.adjust(2)
     return builder.as_markup()
@@ -39,7 +41,7 @@ async def get_lumberjack_kb():
 async def get_cleaner_kb():
     row = random.randint(0, 3)
     column = random.randint(0, 4)
-    job_kb = InlineKeyboardMarkup(row_width=5)
+    builder = InlineKeyboardBuilder()
     for i in range(4):
         for j in range(5):
             text = " "
@@ -47,8 +49,12 @@ async def get_cleaner_kb():
             if row == i and column == j:
                 text = "1"
                 call_back = "special дворник"
-            job_kb.insert(InlineKeyboardButton(text, callback_data=call_back))
-    return job_kb
+            builder.button(
+                text=text, 
+                callback_data=call_back
+            )
+    builder.adjust(5)
+    return builder.as_markup()
 
 
 async def show_main_menu(message) -> bool:
@@ -62,14 +68,10 @@ async def show_main_menu(message) -> bool:
         
 
 async def generate_jobbuttons(jobs: list[tuple[str, int]], level: int):
-    global jobs_callback
     builder = InlineKeyboardBuilder()
     for job in jobs:
         if job[1] <= level:
-            builder.button(
-                text=job[0], callback_data=job[0]
-            )
-            config.jobs_callback.append(job[0])
+            builder.button(text=job[0], callback_data=JobsCallbackFactory(job=job[0]))
         else:
             break
     return builder.as_markup()
@@ -77,8 +79,6 @@ async def generate_jobbuttons(jobs: list[tuple[str, int]], level: int):
 
 async def get_jobs_kb(available_jobs, levelnum):
     jobs_kb = None
-    print("!!!!!Avail", available_jobs)
-    print("!!!!!Level", levelnum)
     if available_jobs[0][1] <= levelnum:
         jobs_kb = await generate_jobbuttons(jobs=available_jobs, level=levelnum)
     msg = f"<b>Выбери работу:</b>\n<b><i>Твой уровень: {levelnum}</i></b>\n\n"
