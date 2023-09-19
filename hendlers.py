@@ -1,9 +1,11 @@
 import config
 
-from aiogram import Router, F
+from aiogram import Router, F, types
+from aiogram.filters import Command
 from helpers.keyboard_helpers import show_main_menu
-from helpers.db import increment_balance, update_user_job, get_restaurants_kb
+from helpers.db import increment_balance, update_user_job, get_restaurants_kb, con, cur
 from helpers.keyboard_helpers import get_job_kb, send_jobs
+from helpers.callback_factories import LumberjackJobCallbackFactory
 
 
 router = Router()
@@ -24,27 +26,31 @@ async def cleaner_true_callback(call):
     await call.message.edit_text(message, reply_markup=job_kb)
 
 
-@router.callback_query(F.data in config.jobs_callback)
-async def jobs_callback_handler(call):
-    await call.answer()
-    await update_user_job(call.from_user.id, call.data)
-    message, job_kb = await get_job_kb(call.from_user.id, call.data)
-    print("!!!!!!!", job_kb, message)
-    await call.message.answer(message, reply_markup=job_kb)
+# @router.callback_query(F.data in config.jobs_callback)
+# async def jobs_callback_handler(call: types.CallbackQuery):
+#     await call.answer()
+#     await update_user_job(call.from_user.id, call.data)
+#     message, job_kb = await get_job_kb(call.from_user.id, call.data)
+#     print("!!!!!!!", job_kb, message)
+#     await call.message.answer(message, reply_markup=job_kb)
 
 
-@router.callback_query(F.data in ("left", "right"))
-async def lumberjack_job(call):
+@router.callback_query(LumberjackJobCallbackFactory.filter())
+async def lumberjack_job(
+        callback: types.CallbackQuery, 
+        callback_data: LumberjackJobCallbackFactory
+    ):
     is_lumber_on_left = False
-    first_layer = call.message.text[-14:]
-    second_layer = call.message.text[-27:-14]
+    first_layer = callback.message.text[-14:]
+    second_layer = callback.message.text[-27:-14]
     if first_layer[5] == "-":
         is_lumber_on_left = True
+    print('--- LumberjackJobCallbackFactory:', callback_data.value)
     print(is_lumber_on_left)
-    print(call.message.text[-27:])
+    print(callback.message.text[-27:])
 
 
-@router.message_handler(commands=["deluser"])
+@router.message(Command("deluser"))
 async def deluser_command(message):
     global con, cur, state
     deleteusersql = f"delete from users where user_id = {message.from_user.id}"
@@ -52,7 +58,7 @@ async def deluser_command(message):
     con.commit()
     state = None
 
-@router.message_handler(commands=["start"])
+@router.message(Command("start"))
 async def start_command(message):
     global con, cur, state
     state = None
@@ -80,11 +86,12 @@ async def start_command(message):
         state = "skin_color"
         await message.answer("выбери цвет кожи", reply_markup=config.skincolor_keyboard)
     else:
+        state = "main_menu"
         await show_main_menu(message)
 
 
-@router.message_handler()
-async def message_handler(message):
+@router.message()
+async def all_messages(message):
     global con, cur, state
     if state == "nick":
         sql = f"update users set user_name = '{message.text}' where user_id = {message.from_user.id}"
@@ -126,4 +133,3 @@ async def message_handler(message):
     elif state == "restaurants":
         if message.text == ("Назад"):
             await show_main_menu(message)
-                

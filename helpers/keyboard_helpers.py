@@ -5,6 +5,10 @@ from helpers.db import get_user_info, get_level_and_jobs
 from helpers.games import get_tree_for_lumberjack_job
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram import types
+from helpers.callback_factories import LumberjackJobCallbackFactory
+
 
 async def get_job_kb(user_id, job_name):
     user_info = await get_user_info(user_id)
@@ -21,9 +25,15 @@ async def get_job_kb(user_id, job_name):
     
 
 async def get_lumberjack_kb():
-    job_kb = InlineKeyboardMarkup()
-    job_kb.row(InlineKeyboardButton("⬅", callback_data="left"), InlineKeyboardButton("➡", callback_data="right"))
-    return job_kb
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text="⬅", callback_data=LumberjackJobCallbackFactory(action="left", value=1)
+    )
+    builder.button(
+        text="➡", callback_data=LumberjackJobCallbackFactory(action="right", value=1)
+    )
+    builder.adjust(2)
+    return builder.as_markup()
 
 
 async def get_cleaner_kb():
@@ -53,14 +63,16 @@ async def show_main_menu(message) -> bool:
 
 async def generate_jobbuttons(jobs: list[tuple[str, int]], level: int):
     global jobs_callback
-    jobs_kb = InlineKeyboardMarkup()
+    builder = InlineKeyboardBuilder()
     for job in jobs:
         if job[1] <= level:
-            jobs_kb.add(InlineKeyboardButton(text=job[0], callback_data=job[0]))
-            jobs_callback.append(job[0])
+            builder.button(
+                text=job[0], callback_data=job[0]
+            )
+            config.jobs_callback.append(job[0])
         else:
             break
-    return jobs_kb
+    return builder.as_markup()
 
 
 async def get_jobs_kb(available_jobs, levelnum):
