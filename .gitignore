@@ -2,3 +2,4 @@
 .env
 clicker.py
 clickerdb.db
+*/__pycache/*
