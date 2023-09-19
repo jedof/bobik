@@ -27,10 +27,10 @@ async def get_job_kb(user_id, job_name):
 async def get_lumberjack_kb():
     builder = InlineKeyboardBuilder()
     builder.button(
-        text="⬅", callback_data=LumberjackJobCallbackFactory(action="left", value=1)
+        text="⬅", callback_data=LumberjackJobCallbackFactory(action="left")
     )
     builder.button(
-        text="➡", callback_data=LumberjackJobCallbackFactory(action="right", value=1)
+        text="➡", callback_data=LumberjackJobCallbackFactory(action="right")
     )
     builder.adjust(2)
     return builder.as_markup()
@@ -77,6 +77,8 @@ async def generate_jobbuttons(jobs: list[tuple[str, int]], level: int):
 
 async def get_jobs_kb(available_jobs, levelnum):
     jobs_kb = None
+    print("!!!!!Avail", available_jobs)
+    print("!!!!!Level", levelnum)
     if available_jobs[0][1] <= levelnum:
         jobs_kb = await generate_jobbuttons(jobs=available_jobs, level=levelnum)
     msg = f"<b>Выбери работу:</b>\n<b><i>Твой уровень: {levelnum}</i></b>\n\n"

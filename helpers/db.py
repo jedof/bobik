@@ -64,7 +64,7 @@ async def get_level_and_jobs(user_id):
     levelnum = cur.fetchone()
     available_jobs = cur.execute(f"SELECT j.job_name, l.level_number from jobs_levels jl LEFT JOIN jobs j on j.job_id = jl.job_id left join levels l on jl.level_id = l.level_id;")
     available_jobs = cur.fetchall()
-    return levelnum[0], available_jobs
+    return available_jobs, levelnum[0] 
 
 async def get_user_info(user_id: int) -> str | None:
     sql = "SELECT u.user_id,"\

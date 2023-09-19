@@ -45,7 +45,7 @@ async def lumberjack_job(
     second_layer = callback.message.text[-27:-14]
     if first_layer[5] == "-":
         is_lumber_on_left = True
-    print('--- LumberjackJobCallbackFactory:', callback_data.value)
+    print('--- LumberjackJobCallbackFactory:', callback_data.action)
     print(is_lumber_on_left)
     print(callback.message.text[-27:])
 
