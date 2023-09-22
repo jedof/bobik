@@ -52,4 +52,3 @@ main_menu = ReplyKeyboardMarkup(
     one_time_keyboard=True
 )
 state = None
-jobs_callback = []
