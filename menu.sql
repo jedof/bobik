@@ -90,6 +90,8 @@ ALTER TABLE users drop COLUMN score;
 ALTER TABLE users ADD score INTEGER;
 ALTER TABLE levels RENAME COLUMN level_entry_score to next_level_entry_score;
 
+ALTER Table jobs add score_step INTEGER;
+
 SELECT u.user_name, u.balance, u.job_id, u.level_id, j.job_name, j.job_salary FROM users u LEFT JOIN jobs j ON u.job_id = j.job_id;
 SELECT 
 	u.user_name, 

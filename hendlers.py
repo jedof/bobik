@@ -3,7 +3,7 @@ import config
 from aiogram import Router, F, types
 from aiogram.filters import Command
 from helpers.keyboard_helpers import show_main_menu
-from helpers.db import increment_balance, update_user_job, get_restaurants_kb, con, cur
+from helpers.db import increment_balance, update_user_job, get_restaurants_kb, increment_score, deincrement_score, con, cur
 from helpers.keyboard_helpers import get_job_kb, send_jobs
 from helpers.callback_factories import LumberjackJobCallbackFactory, JobsCallbackFactory
 
@@ -14,14 +14,15 @@ router = Router()
 @router.callback_query(F.data == " ")
 async def cleaner_callback(call):
     await call.answer("Ты промазал")
+    await deincrement_score(call.from_user.id)
 
 
 @router.callback_query(F.data.startswith("special"))
 async def cleaner_true_callback(call):
     await call.answer()
     job = call.data.split()[-1]
-    balance = await increment_balance(call.from_user.id)
-    print("!!!!!", balance)
+    await increment_balance(call.from_user.id)
+    await increment_score(call.from_user.id)
     message, job_kb = await get_job_kb(call.from_user.id, job)
     await call.message.edit_text(message, reply_markup=job_kb)
 
@@ -34,7 +35,6 @@ async def jobs_callback_handler(
     await call.answer()
     await update_user_job(call.from_user.id, callback_data.job)
     message, job_kb = await get_job_kb(call.from_user.id, callback_data.job)
-    print("!!!!!!!", job_kb, message)
     await call.message.answer(message, reply_markup=job_kb)
 
 
@@ -117,7 +117,7 @@ async def all_messages(message):
         await show_main_menu(message)
         state = "main_menu"
     elif state == "main_menu":
-        cur.execute(f"SELECT u.user_name, j.job_name, j.job_salary, pa.balance, l.level_number from users u LEFT JOIN jobs j ON j.job_id = u.job_id LEFT JOIN levels l ON l.level_id = u.level_id left join player_attributes pa on pa.user_id = u.user_id WHERE u.user_id = {message.from_user.id};")
+        cur.execute(f"SELECT u.user_name, j.job_name, j.job_salary, pa.balance, pa.score, l.level_number from users u LEFT JOIN jobs j ON j.job_id = u.job_id LEFT JOIN levels l ON l.level_id = u.level_id left join player_attributes pa on pa.user_id = u.user_id WHERE u.user_id = {message.from_user.id};")
         usersql = cur.fetchone()
         if message.text == "Профиль":
             await message.answer("<b>Твой профиль</b>\n\n"
@@ -126,7 +126,8 @@ async def all_messages(message):
                                  f"<b>Работа:</b> <i>{usersql[1]}</i>\n"
                                  f"<b>Зарплата:</b> <i>{usersql[2]}</i>\n"
                                  f"<b>Баланс:</b> <i>{usersql[3]}</i>\n"
-                                 f"<b>Уровень:</b> <i>{usersql[4]}</i>\n"
+                                 f"<b>Опыт:</b> <i>{usersql[4]}</i>\n"
+                                 f"<b>Уровень:</b> <i>{usersql[5]}</i>\n"
                                  "<b>Доход:</b>\n")
         elif message.text == "Работы":
             await send_jobs(message)

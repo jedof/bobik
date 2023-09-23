@@ -114,3 +114,55 @@ async def get_restaurant_food_categories_kb(restaurant_name):
           f"WHERE r.restaurant_name = {restaurant_name};"
     cur.execute(sql)
     restaurants = cur.fetchall()
+
+
+async def increment_score(user_id):
+    sql = f"UPDATE "\
+            "player_attributes pa "\
+            "set "\
+            "score = score + ("\
+            "SELECT "\
+            "j.score_step "\
+            "from "\
+            "users u "\
+            "INNER JOIN jobs j ON u.job_id = j.job_id "\
+            "where "\
+            f"u.user_id = {user_id}"\
+            ") "\
+            "WHERE "\
+            f"pa.user_id = {user_id} RETURNING pa.score;"
+    cur.execute(sql)
+    score = cur.fetchone()
+    con.commit()
+    return score[0]
+
+
+async def deincrement_score(user_id):
+    sql = f"SELECT "\
+            "pa.score "\
+            "from "\
+            "player_attributes pa "\
+            "WHERE "\
+            f"pa.user_id = {user_id};"
+    cur.execute(sql)
+    score = cur.fetchone()
+    print(score)
+    if score[0] >= 1:
+        sql = f"UPDATE "\
+                "player_attributes pa "\
+                "set "\
+                "score = score - ("\
+                "SELECT "\
+                "j.score_step "\
+                "from "\
+                "users u "\
+                "INNER JOIN jobs j ON u.job_id = j.job_id "\
+                "where "\
+                f"u.user_id = {user_id}"\
+                ") "\
+                "WHERE "\
+                f"pa.user_id = {user_id} RETURNING pa.score;"
+        cur.execute(sql)
+        score = cur.fetchone()
+    con.commit()
+    return score[0]

@@ -12,7 +12,7 @@ from helpers.callback_factories import LumberjackJobCallbackFactory, JobsCallbac
 
 async def get_job_kb(user_id, job_name):
     user_info = await get_user_info(user_id)
-    msg = f"<b>Ты устроился на работу</b>\n\nНазвание работы: {user_info[-7]}\nописание работы: {user_info[-5]}\nЗарплата: {user_info[-6]}\nБаланс: {user_info[-4]}\nУровень: {user_info[7]}"
+    msg = f"<b>Ты устроился на работу</b>\n\nНазвание работы: {user_info[-7]}\nописание работы: {user_info[-5]}\nЗарплата: {user_info[-6]}\nБаланс: {user_info[-4]}\nОпыт: {user_info[-2]}\nУровень: {user_info[7]}"
     job_name = job_name.lower()
     if job_name == "дворник":
         job_kb = await get_cleaner_kb()
