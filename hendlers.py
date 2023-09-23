@@ -74,6 +74,9 @@ async def start_command(message):
                 {message.from_user.id}, '{message.from_user.first_name}', '{message.from_user.last_name}', \
                 NULL, (select level_id from levels where level_number = 1), (select job_id from jobs where job_name = 'Безработный'))"
         cur.execute(sql)
+        sql = f"insert into player_attributes (user_id, balance, score, food, stamina) \
+                values ({message.from_user.id}, 0, 0, 1200, 100)"
+        cur.execute(sql)
         con.commit()
         state = "nick"
         await message.answer("Напиши свое имя")
@@ -112,6 +115,7 @@ async def all_messages(message):
         cur.execute(sql)
         con.commit()
         await show_main_menu(message)
+        state = "main_menu"
     elif state == "main_menu":
         cur.execute(f"SELECT u.user_name, j.job_name, j.job_salary, pa.balance, l.level_number from users u LEFT JOIN jobs j ON j.job_id = u.job_id LEFT JOIN levels l ON l.level_id = u.level_id left join player_attributes pa on pa.user_id = u.user_id WHERE u.user_id = {message.from_user.id};")
         usersql = cur.fetchone()

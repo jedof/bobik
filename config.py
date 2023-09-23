@@ -49,6 +49,6 @@ kb = [
 main_menu = ReplyKeyboardMarkup(
     keyboard=kb,
     resize_keyboard=True, 
-    one_time_keyboard=True
+    one_time_keyboard=False
 )
 state = None
