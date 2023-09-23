@@ -139,15 +139,18 @@ async def increment_score(user_id):
 
 async def deincrement_score(user_id):
     sql = f"SELECT "\
-            "pa.score "\
+            "pa.score, "\
+            "j.score_step "\
             "from "\
-            "player_attributes pa "\
+            "users u "\
+            "inner join player_attributes pa on u.user_id = pa.user_id "\
+            "inner join jobs j on u.job_id = j.job_id "\
             "WHERE "\
-            f"pa.user_id = {user_id};"
+            f"u.user_id = {user_id};"
     cur.execute(sql)
     score = cur.fetchone()
     print(score)
-    if score[0] >= 1:
+    if score[0] - score[1] >= 1:
         sql = f"UPDATE "\
                 "player_attributes pa "\
                 "set "\
