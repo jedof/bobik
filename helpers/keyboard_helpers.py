@@ -45,7 +45,7 @@ async def get_cleaner_kb():
     for i in range(4):
         for j in range(5):
             text = " "
-            call_back = " "
+            call_back = "дворник"
             if row == i and column == j:
                 text = "1"
                 call_back = "special дворник"

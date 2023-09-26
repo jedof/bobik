@@ -148,24 +148,16 @@ async def deincrement_score(user_id):
             "WHERE "\
             f"u.user_id = {user_id};"
     cur.execute(sql)
-    score = cur.fetchone()
+    score, score_step = cur.fetchone()
     print(score)
-    if score[0] - score[1] >= 1:
+    if score - score_step >= 0:
         sql = f"UPDATE "\
                 "player_attributes pa "\
                 "set "\
-                "score = score - ("\
-                "SELECT "\
-                "j.score_step "\
-                "from "\
-                "users u "\
-                "INNER JOIN jobs j ON u.job_id = j.job_id "\
-                "where "\
-                f"u.user_id = {user_id}"\
-                ") "\
+                f"score = score - {score_step}"\
                 "WHERE "\
                 f"pa.user_id = {user_id} RETURNING pa.score;"
         cur.execute(sql)
         score = cur.fetchone()
     con.commit()
-    return score[0]
+    return score

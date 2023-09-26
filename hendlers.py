@@ -11,10 +11,12 @@ from helpers.callback_factories import LumberjackJobCallbackFactory, JobsCallbac
 router = Router()
 
 
-@router.callback_query(F.data == " ")
+@router.callback_query(F.data == "дворник")
 async def cleaner_callback(call):
     await call.answer("Ты промазал")
     await deincrement_score(call.from_user.id)
+    message, job_kb = await get_job_kb(call.from_user.id, "дворник")
+    await call.message.edit_text(message, reply_markup=job_kb)
 
 
 @router.callback_query(F.data.startswith("special"))
