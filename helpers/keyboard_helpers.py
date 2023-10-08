@@ -3,9 +3,9 @@ import random
 
 from helpers.db import get_user_info, get_level_and_jobs
 from helpers.games import get_tree_for_lumberjack_job
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, KeyboardButton 
 
-from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from aiogram import types
 from helpers.callback_factories import LumberjackJobCallbackFactory, JobsCallbackFactory
 
@@ -74,14 +74,15 @@ async def generate_jobbuttons(jobs: list[tuple[str, int]], level: int):
             builder.button(text=job[0], callback_data=JobsCallbackFactory(job=job[0]))
         else:
             break
+    builder.adjust(1)
     return builder.as_markup()
 
 
-async def get_jobs_kb(available_jobs, levelnum):
+async def get_jobs_kb(available_jobs, levelnum, next_level_entry_score):
     jobs_kb = None
     if available_jobs[0][1] <= levelnum:
         jobs_kb = await generate_jobbuttons(jobs=available_jobs, level=levelnum)
-    msg = f"<b>Выбери работу:</b>\n<b><i>Твой уровень: {levelnum}</i></b>\n\n"
+    msg = f"<b>Выбери работу:</b>\n<b><i>Твой уровень: {levelnum}</i></b>\n<b><i>До следующего уровеня: {next_level_entry_score}</i></b>\n\n"
     for job in available_jobs:
         if job[1] <= levelnum:
             msg += f"<b>{job[0]}</b> <i>- доступно с {job[1]} уровня</i>\n"
@@ -91,6 +92,15 @@ async def get_jobs_kb(available_jobs, levelnum):
 
 
 async def send_jobs(message):
-    available_jobs, levelnum = await get_level_and_jobs(message.from_user.id)
-    msg, jobs_kb = await get_jobs_kb(available_jobs, levelnum)
+    available_jobs, levelnum, next_level_entry_score = await get_level_and_jobs(message.from_user.id)
+    msg, jobs_kb = await get_jobs_kb(available_jobs, levelnum, next_level_entry_score)
     await message.answer(msg, reply_markup=jobs_kb)
+
+
+async def get_shops_kb():
+    builder = ReplyKeyboardBuilder()
+    builder.add(KeyboardButton(text="Продуктовый магазин"))
+    builder.add(KeyboardButton(text="Ресторан"))
+    builder.add(KeyboardButton(text="Назад"))
+    builder.adjust(2)
+    return builder.as_markup(resize_keyboard=True)

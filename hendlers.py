@@ -2,8 +2,8 @@ import config
 
 from aiogram import Router, F, types
 from aiogram.filters import Command
-from helpers.keyboard_helpers import show_main_menu
-from helpers.db import increment_balance, update_user_job, get_restaurants_kb, increment_score, deincrement_score, con, cur
+from helpers.keyboard_helpers import show_main_menu, get_shops_kb
+from helpers.db import level_up, increment_balance, update_user_job, get_restaurants_kb, increment_score, deincrement_score, get_food_shop_kb, con, cur
 from helpers.keyboard_helpers import get_job_kb, send_jobs
 from helpers.callback_factories import LumberjackJobCallbackFactory, JobsCallbackFactory
 
@@ -27,6 +27,10 @@ async def cleaner_true_callback(call):
     await increment_score(call.from_user.id)
     message, job_kb = await get_job_kb(call.from_user.id, job)
     await call.message.edit_text(message, reply_markup=job_kb)
+    msg, level = await level_up(call.from_user.id)
+    if level:
+        await call.message.answer(msg)
+        await show_main_menu(call.message)
 
 
 @router.callback_query(JobsCallbackFactory.filter())
@@ -46,12 +50,17 @@ async def lumberjack_job(
         callback_data: LumberjackJobCallbackFactory
     ):
     is_lumber_on_left = False
-    first_layer = callback.message.text[-14:]
+    first_layer = callback.message.text[-13:]
     second_layer = callback.message.text[-27:-14]
     if first_layer[5] == "-":
         is_lumber_on_left = True
+    print(callback_data.action)
     print(is_lumber_on_left)
     print(callback.message.text[-27:])
+    print("first", first_layer)
+    print("first", first_layer[6])
+    print("first", first_layer[5])
+    print("second", second_layer)
 
 
 @router.message(Command("deluser"))
@@ -134,11 +143,17 @@ async def all_messages(message):
         elif message.text == "Работы":
             await send_jobs(message)
         elif message.text == "Магазин":
+            kb = await get_shops_kb()
+            await message.answer("<b>Магазин</b>", reply_markup=kb)
+            state = "choice"
+    elif state == "choice":
+        if message.text == ("Продуктовый магазин"):
+            food_shop_kb = await get_food_shop_kb()
+            await message.answer("<b>Выбери продукт</b>", reply_markup=food_shop_kb)
+            # TODO: заполнить таблицу products и написать функцию для получения продуктов и генерации клавиатуры с выбором продуктов   
+        elif message.text == ("Ресторан"):
             restaurants_kb = await get_restaurants_kb()
             await message.answer("<b>Выбери магазин</b>", reply_markup=restaurants_kb)
-            state = "restaurants"
         elif message.text == ("Назад"):
             await show_main_menu(message)
-    elif state == "restaurants":
-        if message.text == ("Назад"):
-            await show_main_menu(message)
+            state = "main_menu"
