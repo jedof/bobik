@@ -1,7 +1,8 @@
 import psycopg2
 import config
 
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton
+from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
 
 con=psycopg2.connect(database=config.DATABASE,
@@ -60,11 +61,11 @@ async def get_job_by_jobname(job: str):
 
 
 async def get_level_and_jobs(user_id):
-    cur.execute(f"select l.level_number from users u left join levels l on u.level_id = l.level_id where user_id = {user_id}")
-    levelnum = cur.fetchone()
+    cur.execute(f"select l.level_number, l.next_level_entry_score from users u left join levels l on u.level_id = l.level_id where user_id = {user_id}")
+    levelnum, next_level_entry_score = cur.fetchone()
     available_jobs = cur.execute(f"SELECT j.job_name, l.level_number from jobs_levels jl LEFT JOIN jobs j on j.job_id = jl.job_id left join levels l on jl.level_id = l.level_id;")
     available_jobs = cur.fetchall()
-    return available_jobs, levelnum[0] 
+    return available_jobs, levelnum, next_level_entry_score
 
 async def get_user_info(user_id: int) -> str | None:
     sql = "SELECT u.user_id,"\
@@ -98,11 +99,17 @@ async def get_restaurants_kb():
     global cur
     restaurants = cur.execute("select restaurant_name from restaurants")
     restaurants = cur.fetchall()
-    restaurants_kb = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+    builder = InlineKeyboardBuilder()
     for restaurant in restaurants:
-        restaurants_kb.add(KeyboardButton(restaurant[0]))
-    restaurants_kb.add(KeyboardButton("Назад"))
-    return restaurants_kb
+        builder.add(InlineKeyboardButton(callback_data=restaurant[0], text=restaurant[0]))
+    builder.adjust(1)
+    return builder.as_markup(resize_keyboard=True)
+
+
+async def get_food_shop_kb():
+    builder = ReplyKeyboardBuilder()
+    builder.add(KeyboardButton(text="Назад"))
+    return builder.as_markup(resize_keyboard=True)
 
 
 async def get_restaurant_food_categories_kb(restaurant_name):
@@ -161,3 +168,36 @@ async def deincrement_score(user_id):
         score = cur.fetchone()
     con.commit()
     return score
+
+
+async def level_up(user_id):
+    sql = f"select "\
+    "u.level_id, l.next_level_entry_score, pa.score "\
+    "from "\
+    "users u "\
+    "inner join levels l on u.level_id = l.level_id "\
+    "inner join player_attributes pa on u.user_id = pa.user_id "\
+    f"where u.user_id = {user_id}"
+    cur.execute(sql)
+    level, next_level_entry_score, score = cur.fetchone()
+    print(level, next_level_entry_score, score)
+    if score >= next_level_entry_score:
+        level_update = f"UPDATE "\
+                "users u "\
+                "set "\
+                f"level_id = level_id + 1"\
+                "WHERE "\
+                f"u.user_id = {user_id};"
+        cur.execute(level_update)
+        cur.fetchone()
+        score_update = f"UPDATE "\
+                "player_attributes pa "\
+                "set "\
+                f"score = 0"\
+                "WHERE "\
+                f"pa.user_id = {user_id};"
+        cur.execute(score_update)
+        cur.fetchone()
+        msg = f"Ты поднялся на уровень {level + 1}"
+        return msg, True
+    con.commit()
