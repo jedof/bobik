@@ -7,3 +7,7 @@ class LumberjackJobCallbackFactory(CallbackData, prefix="lumberjack"):
 
 class JobsCallbackFactory(CallbackData, prefix="job"):
     job: str
+
+
+class RestrantsCallbackFactory(CallbackData, prefix="rest"):
+    rest_name: str

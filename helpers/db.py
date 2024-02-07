@@ -95,21 +95,11 @@ async def get_user_info(user_id: int) -> str | None:
     return user_info if user_info else None
 
 
-async def get_restaurants_kb():
+async def get_restaurants():
     global cur
     restaurants = cur.execute("select restaurant_name from restaurants")
     restaurants = cur.fetchall()
-    builder = InlineKeyboardBuilder()
-    for restaurant in restaurants:
-        builder.add(InlineKeyboardButton(callback_data=restaurant[0], text=restaurant[0]))
-    builder.adjust(1)
-    return builder.as_markup(resize_keyboard=True)
-
-
-async def get_food_shop_kb():
-    builder = ReplyKeyboardBuilder()
-    builder.add(KeyboardButton(text="Назад"))
-    return builder.as_markup(resize_keyboard=True)
+    return restaurants
 
 
 async def get_restaurant_food_categories_kb(restaurant_name):
@@ -201,3 +191,12 @@ async def level_up(user_id):
         msg = f"Ты поднялся на уровень {level + 1}"
         return msg, True
     con.commit()
+
+
+async def get_rest_categories(rest_name):
+    sql = "SELECT DISTINCT "\
+          "r.restaurant_id, fc.category_id, fc.category_name "\
+          "FROM restaurant_menu rm "\
+          "INNER JOIN restaurants r ON rm.restaurant_id = r.restaurant_id "\
+          "INNER JOIN food_categories fc ON rm.food_category_id = fc.category_id "\
+          "WHERE rm.restaurant_id = r.restaurant_id;"

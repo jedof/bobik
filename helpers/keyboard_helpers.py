@@ -1,13 +1,13 @@
 import config
 import random
 
-from helpers.db import get_user_info, get_level_and_jobs
+from helpers.db import get_user_info, get_level_and_jobs, get_restaurants
 from helpers.games import get_tree_for_lumberjack_job
-from aiogram.types import InlineKeyboardMarkup, KeyboardButton 
+from aiogram.types import InlineKeyboardMarkup, KeyboardButton, InlineKeyboardButton 
 
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from aiogram import types
-from helpers.callback_factories import LumberjackJobCallbackFactory, JobsCallbackFactory
+from helpers.callback_factories import LumberjackJobCallbackFactory, JobsCallbackFactory, RestrantsCallbackFactory
 
 
 async def get_job_kb(user_id, job_name):
@@ -103,4 +103,20 @@ async def get_shops_kb():
     builder.add(KeyboardButton(text="Ресторан"))
     builder.add(KeyboardButton(text="Назад"))
     builder.adjust(2)
+    return builder.as_markup(resize_keyboard=True)
+
+
+async def get_restaurants_kb():
+    builder = InlineKeyboardBuilder()
+    restaurants = await get_restaurants()
+    for restaurant in restaurants:
+        print(restaurant)
+        builder.button(callback_data=RestrantsCallbackFactory(rest_name=restaurant[0]), text=restaurant[0])
+    builder.adjust(1)
+    return builder.as_markup(resize_keyboard=True)
+
+
+async def get_food_shop_kb():
+    builder = ReplyKeyboardBuilder()
+    builder.add(KeyboardButton(text="Назад"))
     return builder.as_markup(resize_keyboard=True)
