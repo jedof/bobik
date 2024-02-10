@@ -2,10 +2,15 @@ import config
 
 from aiogram import Router, F, types
 from aiogram.filters import Command
-from helpers.keyboard_helpers import show_main_menu, get_shops_kb
-from helpers.db import level_up, increment_balance, update_user_job, get_restaurants_kb, increment_score, deincrement_score, get_food_shop_kb, con, cur
-from helpers.keyboard_helpers import get_job_kb, send_jobs
-from helpers.callback_factories import LumberjackJobCallbackFactory, JobsCallbackFactory
+from helpers.db import (
+    level_up, increment_balance, update_user_job,
+    increment_score, deincrement_score, con, cur
+)
+from helpers.keyboard_helpers import (
+    get_job_kb, send_jobs, get_restaurants_kb, 
+    get_food_shop_kb, show_main_menu, get_shops_kb
+)
+from helpers.callback_factories import LumberjackJobCallbackFactory, JobsCallbackFactory, RestrantsCallbackFactory
 
 
 router = Router()
@@ -31,6 +36,15 @@ async def cleaner_true_callback(call):
     if level:
         await call.message.answer(msg)
         await show_main_menu(call.message)
+
+
+@router.callback_query(RestrantsCallbackFactory.filter())
+async def select_restaurant(
+    call: types.CallbackQuery,
+    callback_data: RestrantsCallbackFactory
+):
+    await call.answer()
+    print(callback_data)
 
 
 @router.callback_query(JobsCallbackFactory.filter())
@@ -153,7 +167,7 @@ async def all_messages(message):
             # TODO: заполнить таблицу products и написать функцию для получения продуктов и генерации клавиатуры с выбором продуктов   
         elif message.text == ("Ресторан"):
             restaurants_kb = await get_restaurants_kb()
-            await message.answer("<b>Выбери магазин</b>", reply_markup=restaurants_kb)
+            await message.answer("<b>Выбери ресторан</b>", reply_markup=restaurants_kb)
         elif message.text == ("Назад"):
             await show_main_menu(message)
             state = "main_menu"
