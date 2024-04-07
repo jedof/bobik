@@ -1,54 +1,51 @@
-import os
-
-from dotenv import load_dotenv
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from pydantic_settings import BaseSettings
+from pydantic import SecretStr
 
 
-load_dotenv()
-TGTOKEN = os.getenv('TGTOKEN')
-DATABASE = os.getenv('DATABASE')
-USERDB = os.getenv('USERDB')
-PASSWORD = os.getenv('PASSWORD')
-PORT = os.getenv('PORT')
-HOST = os.getenv('HOST')
+class Settings(BaseSettings):
+    TGTOKEN: SecretStr
+    DATABASE: str
+    USERDB: str
+    POSTGRES_PASSWORD: SecretStr
+    PORT: str
+    DB_URL: str
 
+    gender_keyboard: ReplyKeyboardMarkup = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="Мужской"),
+                KeyboardButton(text="Женский")
+            ]
+        ],  
+        resize_keyboard=True, 
+        one_time_keyboard=True
+    )
 
-kb = [
-    [
-        KeyboardButton(text="Мужской"),
-        KeyboardButton(text="Женский")
-    ]
-]
-gender_keyboard = ReplyKeyboardMarkup(
-    keyboard=kb,
-    resize_keyboard=True, 
-    one_time_keyboard=True
-)
+    skincolor_keyboard: ReplyKeyboardMarkup = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="Белый"),
+                KeyboardButton(text="Черный")
+            ]
+        ],
+        resize_keyboard=True, 
+        one_time_keyboard=True
+    )
 
-kb = [
-    [
-        KeyboardButton(text="Белый"),
-        KeyboardButton(text="Черный")
-    ]
-]
-skincolor_keyboard = ReplyKeyboardMarkup(
-    keyboard=kb,
-    resize_keyboard=True, 
-    one_time_keyboard=True
-)
+    main_menu: ReplyKeyboardMarkup = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="Профиль"), 
+                KeyboardButton(text="Работы")
+            ],
+            [
+                KeyboardButton(text="Магазин")       
+            ]
+        ],
+        resize_keyboard=True, 
+        one_time_keyboard=False
+    )
+    state: str | None = None
 
-kb = [
-    [
-        KeyboardButton(text="Профиль"), 
-        KeyboardButton(text="Работы")
-    ],
-    [
-        KeyboardButton(text="Магазин")       
-    ]
-]
-main_menu = ReplyKeyboardMarkup(
-    keyboard=kb,
-    resize_keyboard=True, 
-    one_time_keyboard=False
-)
-state = None
+settings = Settings()

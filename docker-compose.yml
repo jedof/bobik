@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  bobik:
+    container_name: bobik_bot
+    build: .
+    depends_on:
+      - db
+    command: bash -c 'python3 main.py'
+    volumes:
+      - .:/app/
+    restart: unless-stopped
+    environment:
+      - DB_URL=postgresql+asyncpg://${USERDB}:${POSTGRES_PASSWORD}@db:${PORT}/${DATABASE}
+    env_file:
+      - .env
+
+  db:
+    container_name: bobik_db
+    image: postgres:custom
+    build: 
+      context: db
+      dockerfile: Dockerfile
+    ports:
+      - ${PORT}:5432
+    volumes:
+      - ./postgres_data:/var/lib/postgres/data
+    restart: unless-stopped
+    env_file:
+      - .env

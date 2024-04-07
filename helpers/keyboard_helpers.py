@@ -8,6 +8,7 @@ from aiogram.types import InlineKeyboardMarkup, KeyboardButton, InlineKeyboardBu
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from aiogram import types
 from helpers.callback_factories import LumberjackJobCallbackFactory, JobsCallbackFactory, RestrantsCallbackFactory
+from routers.start_router import start_router_db as srd
 
 
 async def get_job_kb(user_id, job_name):
@@ -57,10 +58,10 @@ async def get_cleaner_kb():
     return builder.as_markup()
 
 
-async def show_main_menu(message) -> bool:
+async def show_main_menu(session, message) -> bool:
     global state
     state = "main_menu"
-    nicksql = await get_user_info(message.from_user.id)
+    nicksql = await srd.db_get_user_data(session, message.from_user.id)
     if not nicksql:
         return False
     await message.answer(f"Добро пожаловоть в меню {nicksql[1]}", reply_markup=config.main_menu)

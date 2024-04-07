@@ -15,7 +15,6 @@ from helpers.callback_factories import LumberjackJobCallbackFactory, JobsCallbac
 
 router = Router()
 
-
 @router.callback_query(F.data == "дворник")
 async def cleaner_callback(call):
     await call.answer("Ты промазал")

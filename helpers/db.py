@@ -7,7 +7,7 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
 con=psycopg2.connect(database=config.DATABASE,
                         user=config.USERDB,
-                        password=config.PASSWORD,
+                        POSTGRES_PASSWORD=config.POSTGRES_PASSWORD,
                         port=config.PORT,
                         host=config.HOST)
 cur = con.cursor()
